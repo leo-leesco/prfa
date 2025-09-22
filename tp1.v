@@ -238,7 +238,14 @@ Lemma min_comm : forall n m, min n m = min m n.
 Proof.
   intro n.
   (* Hint: start the induction before introducing m *)
-Admitted.
+  induction n.
+  - simpl. intro m. induction m.
+    + reflexivity.
+    + simpl. reflexivity.
+  - intro m. induction m.
+    + simpl. reflexivity.
+    + simpl. f_equal. apply IHn.
+Qed.
 
 (** ADVANCED EXERCISES
 
@@ -290,7 +297,15 @@ Section Advanced.
 
   Lemma Russel : ~ (P <-> ~ P).
   Proof.
-  Admitted.
+    intro pnp.
+    destruct pnp as [pinp npip].
+    assert (p:P). {
+      apply npip.
+      intro hP.
+      exact ((pinp hP) hP).
+    }
+    exact ((pinp p) p).
+  Qed.
 
 End Advanced.
 
@@ -323,7 +338,11 @@ Qed.
 
 Lemma False_forall : False -> (forall (P : Prop), P).
 Proof.
-Admitted.
+  intro f.
+  intro p.
+  exfalso.
+  exact f.
+Qed.
 
 (**
 
@@ -343,23 +362,39 @@ In other words, Rocq implements intuitionistic logic. This allows
 
 **)
 
-Definition theLEM := forall P, P \/ ~ P.
-Definition theDNS := forall P, ~~ P -> P. (* double negation shift *)
-Definition thePL := forall P Q, ((P -> Q) -> P) -> P. (* Peirce's law *)
+Definition theLEM := forall P:Prop, P \/ ~ P.
+Definition theDNS := forall P:Prop, ~~ P -> P. (* double negation shift *)
+Definition thePL := forall P Q:Prop, ((P -> Q) -> P) -> P. (* Peirce's law *)
 
 (** We can now prove the other direction from before. **)
 
 Lemma lem_dns_general : theLEM -> theDNS.
 Proof.
-Admitted.
+  intro lem.
+  intro p.
+  intro nnp.
+  specialize (lem p).
+  destruct lem as [p' | np].
+  - exact p'.
+  - exfalso. apply nnp. exact np.
+Qed.
 
-Lemma lem_pl_general : theLEM -> theDNS.
+Lemma lem_pl_general : theLEM -> thePL.
 Proof.
-Admitted.
+  intro lem.
+  intros P Q.
+  intro f.
+  destruct (lem P) as [p | np].
+  - exact p.
+  - apply f. intro p. exfalso. exact (np p).
+Qed.
 
 Lemma dns_lem : theDNS -> theLEM.
 Proof.
-Admitted.
+  intro dns.
+  intro P.
+  apply (dns (P \/ (not P))).
+
 
 Lemma pl_lem : thePL -> theLEM.
 Proof.
