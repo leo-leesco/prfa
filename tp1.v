@@ -393,12 +393,27 @@ Lemma dns_lem : theDNS -> theLEM.
 Proof.
   intro dns.
   intro P.
-  apply (dns (P \/ (not P))).
-
+  apply (dns (P \/ not P)).
+  intro npnnp.
+  assert (h:(not P /\ (not (not P)))). {
+    split.
+    - intro p. apply npnnp. left. assumption. 
+    - intro np. apply npnnp. right. assumption.
+  }
+  destruct h as [np nnp].
+  exact (nnp np).
+Qed.
 
 Lemma pl_lem : thePL -> theLEM.
 Proof.
-Admitted.
+  intro pl.
+  intro P.
+  assert (premise: (not (P \/ not P)) -> (P \/ not P)). {
+    intro npnp. right. intro p. apply npnp. left. exact p.
+}
+  apply (pl (P \/ not P) False).
+  exact premise.
+Qed.
 
 (** An example of commuting forall and \/ **)
 
@@ -408,7 +423,14 @@ Lemma forall_or :
     (forall (x : nat), P x \/ Q) ->
     (forall x, P x) \/ Q.
 Proof.
-Admitted.
+  intros P Q lem.
+  intro PxQ.
+  destruct lem as [q | nq].
+  - right. assumption.
+  - left. intro x. specialize (PxQ x). destruct PxQ as [Px | q].
+    + assumption.
+    + exfalso. apply nq. exact q.
+Qed.
 
 (** More classical reasoning. **)
 
@@ -418,7 +440,11 @@ Lemma classical_or_contra_r :
     (~ Q -> P) ->
     P \/ Q.
 Proof.
-Admitted.
+  intros lem P Q nqip.
+  specialize (lem Q) as [q | nq].
+  - right. assumption.
+  - left. apply nqip. exact nq.
+Qed.
 
 (* For the following do you need LEM for both directions? *)
 
@@ -427,7 +453,15 @@ Lemma classical_impl :
   forall (P Q : Prop),
     (P -> Q) <-> (~ P \/ Q).
 Proof.
-Admitted.
+  intros lem P Q.
+  split.
+  - intro piq. specialize (lem P) as [p | np].
+    + right. apply piq. exact p.
+    + left. assumption.
+  - intro npq. intro p. destruct npq as [np | q].
+    + exfalso. apply np. exact p.
+    + assumption.
+Qed.
 
 Lemma contrapositive :
   theLEM ->
@@ -435,7 +469,20 @@ Lemma contrapositive :
     (~ Q -> ~ P) ->
     P -> Q.
 Proof.
-Admitted.
+  intros lem P Q nqnp.
+  destruct (classical_impl lem P Q) as [_ disj].
+  apply disj.
+  destruct (classical_impl lem (not Q) (not P)) as [imp _].
+  assert (dns_in_or : (not (not Q)) \/ (not P) -> (not P) \/ Q). {
+    intro nnqnp.
+    destruct nnqnp as [nnq | np].
+    - right. exact (((lem_dns_general lem) Q) nnq).
+    - left. assumption.
+  }
+  apply dns_in_or.
+  apply imp.
+  exact nqnp.
+Qed.
 
 (** Note: if you want to use specialize on a hyothesis twice, you
     can use specialize (h x) as hx to create a new hypothesis instead of
