@@ -490,12 +490,16 @@ Qed.
  **)
 
 Lemma twice :
-  theLEM ->
+  theLEM -> (* why do we need the LEM ? *)
   forall (P Q : Prop),
     ((P -> Q) -> Q) ->
     ((Q -> P) -> P).
 Proof.
-Admitted.
+  intros lem P Q imp qp.
+  destruct (lem P) as [p | np].
+  - assumption.
+  - apply qp. apply imp. intro p. exfalso. apply np. exact p.
+Qed.
 
 (** More natural numbers.
 
@@ -521,11 +525,40 @@ Admitted.
 
  **)
 
+Lemma zero_absorb :
+  forall n, n * 0 = 0.
+Proof.
+  induction n.
+  - reflexivity.
+  - simpl. apply IHn.
+Qed.
+
+(* Lemma simplify : *)
+(*   forall n m k, n + m = n + k -> m = k. *)
+(* Proof. *)
+(*   intros n m k. *)
+(*   induction n. *)
+(*   - simpl. apply P_imp_P. *)
+(*   - simpl. intro eq. inversion eq. apply IHn. assumption. *)
+(* Qed. *)
+
 Lemma mult_distr :
   forall n m k,
     k * (n + m) = k * n + k * m.
 Proof.
-Admitted.
+  intros n m k.
+  induction k as [ | k IH].
+  - simpl. reflexivity.
+  - simpl. 
+    rewrite plus_assoc. 
+    rewrite plus_assoc. 
+    f_equal. 
+    rewrite <- plus_assoc. 
+    rewrite (plus_comm (k*n) m). 
+    rewrite plus_assoc. 
+    f_equal. 
+    apply IH.
+Qed.
 
 (** If you thought this kind of proof is extremely annoying,
     rest assured, most would agree and in practice you don't have to do them by
