@@ -362,8 +362,8 @@ In other words, Rocq implements intuitionistic logic. This allows
 
 **)
 
-Definition theLEM := forall P:Prop, P \/ ~ P.
-Definition theDNS := forall P:Prop, ~~ P -> P. (* double negation shift *)
+Definition theLEM := forall P, P \/ ~ P.
+Definition theDNS := forall P, ~~ P -> P. (* double negation shift *)
 Definition thePL := forall P Q:Prop, ((P -> Q) -> P) -> P. (* Peirce's law *)
 
 (** We can now prove the other direction from before. **)
@@ -415,6 +415,13 @@ Proof.
   exact premise.
 Qed.
 
+(** Advanced advanced exercise:
+  - Come up with more natural statements equivalent to LEM
+  - Come up with a statement S such that LEM -> S, you cannot prove S -> LEM, but S is also not provable without any assumptions in Rocq
+  - Found one? Great? Now find a statement S' such that S -> S', you cannot prove S' -> S, but S' is also not provable without any assumptions in Rocq
+  - can you come up with a hierarchy S_i of such statements such that S_0 is the strongest and they get subsequently weaker?
+  - can you come up with a hierarchy S_i of such statements such that S_0 is the weakest and they get subsequently stronger?
+ *)
 (** An example of commuting forall and \/ **)
 
 Lemma forall_or :
