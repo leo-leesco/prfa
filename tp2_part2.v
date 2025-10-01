@@ -70,8 +70,10 @@ Inductive le' : nat -> nat -> Prop :=
   ⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
   Do not forget this one.
 
-
-
+   ind : ∀ P : nat -> nat -> Prop
+   -> ∀ n : nat, P 0 n
+   -> ∀ n m : nat, le' n m -> P n m -> P (S n) (S m)
+   -> ∀ n m : le' n m -> P n m
 
 **)
 Check le'_ind.
@@ -82,20 +84,79 @@ Check le'_ind.
   Do not use the standard library or lia!
 
 **)
+Lemma le_zero n : le 0 n.
+Proof.
+  induction n.
+  - reflexivity.
+  - apply le_S. assumption.
+Qed.
+
+Lemma le_succ n m : le n m -> le (S n) (S m).
+Proof.
+  intro nlem.
+  induction nlem.
+  - reflexivity.
+  - apply le_S. assumption.
+Qed.
+
+Lemma le'_succ n m : le' n m -> le' n (S m).
+Proof.
+  intro nlem. induction nlem.
+  - apply leO'.
+  - apply leS'. assumption.
+Qed.
+
 Lemma le_equiv n m :
   le' n m <-> le n m.
 Proof.
-Admitted.
+  split.
+  - revert m. induction n.
+    + intros m _. apply le_zero.
+    + intros m l'. inversion l'. subst. apply le_succ. apply IHn. assumption.
+  - intro nlm. induction nlm.
+    + induction n.
+      * apply leO'.
+      * apply leS'. assumption.
+    + apply le'_succ. assumption.
+Qed.
 
 (** EXERCISE **)
 Fixpoint leb (n m : nat) : bool :=
-  REPLACE_ME.
+  match n , m with
+  | 0, _ => true
+  | S _, 0 => false
+  | S n, S m => leb n m
+  end.
 
 (** EXERCISE **)
+Lemma le'b_spec n m :
+  leb n m = true <-> le' n m.
+Proof.
+  split.
+  - intro nlm.
+    induction n.
+    + apply leO'.
+    + destruct m.
+      * simpl in nlm. discriminate.
+      * simpl in nlm. apply leS'.
+Admitted.
+
+Lemma inf00 n : le n 0 -> n = 0.
+Proof.
+  intro n0.
+  induction n0.
+  - reflexivity.
+  - rewrite IHn0. contradiction.
+
 Lemma leb_spec n m :
   leb n m = true <-> le n m.
 Proof.
-Admitted.
+  split.
+  - intro nlm.
+    induction m.
+    + destruct n.
+      * apply le_n.
+      * apply le_S.
 
 Definition even1 n :=
   exists m, n = 2 * m.
