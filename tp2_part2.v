@@ -129,34 +129,36 @@ Fixpoint leb (n m : nat) : bool :=
   end.
 
 (** EXERCISE **)
-Lemma le'b_spec n m :
-  leb n m = true <-> le' n m.
-Proof.
-  split.
-  - intro nlm.
-    induction n.
-    + apply leO'.
-    + destruct m.
-      * simpl in nlm. discriminate.
-      * simpl in nlm. apply leS'.
-Admitted.
 
-Lemma inf00 n : le n 0 -> n = 0.
-Proof.
-  intro n0.
-  induction n0.
-  - reflexivity.
-  - rewrite IHn0. contradiction.
+(* Lemma le'b_spec n m : *)
+(*   leb n m = true <-> le' n m. *)
+(* Proof. *)
+(*   split. *)
+(*   - intro nlm. *)
+(*     induction n. *)
+(*     + apply leO'. *)
+(*     + destruct m. *)
+(*       * simpl in nlm. discriminate. *)
+(*       * simpl in nlm. apply leS'. *)
+(* Admitted. *)
 
 Lemma leb_spec n m :
   leb n m = true <-> le n m.
 Proof.
-  split.
-  - intro nlm.
-    induction m.
-    + destruct n.
-      * apply le_n.
-      * apply le_S.
+  induction n as [ | n IH ] in m |- *.
+  - simpl. split.
+    + intro tr. induction m.
+      * constructor.
+      * apply le_S. assumption.
+    + trivial.
+  - split.
+    + intro lebsnm. induction m.
+      * simpl in lebsnm. discriminate.
+      * simpl in lebsnm. apply le_succ. apply IH. assumption.
+    + intro snm. simpl. destruct m.
+      * inversion snm.
+      * apply IH. apply le_equiv in snm. inversion snm. apply le_equiv. assumption.
+Qed.
 
 Definition even1 n :=
   exists m, n = 2 * m.
@@ -175,7 +177,11 @@ Fixpoint even2 (n : nat) :=
 
 **)
 Fixpoint even3 (n : nat) : Prop :=
-  REPLACE_ME.
+  match n with
+  | 0 => True
+  | 1 => False
+  | S (S n) => even3 n
+  end.
 
 Inductive even4 : nat -> Prop :=
 | evenO : even4 0
@@ -188,7 +194,12 @@ Inductive even4 : nat -> Prop :=
   ⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️
   Do not forget this one.
 
+   forall P : nat -> Prop, P 0
+   -> forall n : nat, even4 n -> P n -> P (S (S n))
+   -> forall n : even4 n, P n
+
 **)
+Check even4_ind.
 
 (** We now allow you to use [lia]. **)
 Require Import Lia.
@@ -199,7 +210,14 @@ Lemma strong_nat_ind :
     (forall n, (forall m, m < n -> P m) -> P n) ->
     forall n, P n.
 Proof.
-Admitted.
+  intros P SI.
+  induction n.
+  - specialize (SI 0). apply SI. intros m ineq. inversion ineq.
+  - specialize (SI (S n)). apply SI. intros m ineq. inversion ineq.
+    + assumption.
+    + assert (leq : le (S m) (S n)). {
+      apply ineq.
+    }
 
 (** EXERCISE
 
