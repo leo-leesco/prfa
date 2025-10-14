@@ -130,18 +130,6 @@ Fixpoint leb (n m : nat) : bool :=
 
 (** EXERCISE **)
 
-(* Lemma le'b_spec n m : *)
-(*   leb n m = true <-> le' n m. *)
-(* Proof. *)
-(*   split. *)
-(*   - intro nlm. *)
-(*     induction n. *)
-(*     + apply leO'. *)
-(*     + destruct m. *)
-(*       * simpl in nlm. discriminate. *)
-(*       * simpl in nlm. apply leS'. *)
-(* Admitted. *)
-
 Lemma leb_spec n m :
   leb n m = true <-> le n m.
 Proof.
@@ -204,6 +192,14 @@ Check even4_ind.
 (** We now allow you to use [lia]. **)
 Require Import Lia.
 
+Lemma strong_large n m : n < S m <-> n <= m.
+Proof.
+  unfold lt.
+  split; intro ineq.
+  - apply le_equiv in ineq. apply le_equiv. inversion ineq. assumption.
+  - apply le_succ. assumption.
+Qed.
+
 (** EXERCISE **)
 Lemma strong_nat_ind :
   forall (P : nat -> Prop),
@@ -211,13 +207,19 @@ Lemma strong_nat_ind :
     forall n, P n.
 Proof.
   intros P SI.
-  induction n.
-  - specialize (SI 0). apply SI. intros m ineq. inversion ineq.
-  - specialize (SI (S n)). apply SI. intros m ineq. inversion ineq.
-    + assumption.
-    + assert (leq : le (S m) (S n)). {
-      apply ineq.
-    }
+  assert (Stronger : forall n, forall m, m<=n -> P m ). { 
+    induction n as [| n IH].
+    - intros m Hm.
+      assert (m = 0) by lia. subst.
+      apply SI. intros k Hk. inversion Hk.
+    - intros m Hle.
+      inversion Hle; subst.
+      + apply SI. intros k Hk.
+        apply IH. apply le_S_n. assumption.
+      + apply IH. assumption.
+}
+  intro n. specialize (Stronger n n). apply Stronger. lia.
+Qed.
 
 (** EXERCISE
 
@@ -231,32 +233,71 @@ Lemma even1_to_even2 n :
   even1 n ->
   even2 n = true.
 Proof.
-Admitted.
+  intros [m eq].
+  subst.
+  induction m.
+  - trivial.
+  - replace (2 * S m) with (S (S (2 * m))) by lia.
+    simpl. replace (m+0) with m by lia.
+    replace (m + m) with (2 * m) by lia.
+    assumption.
+Qed.
 
 (** EXERCISE **)
+
+  Lemma even2_even3 : forall n, even2 n = true <-> even3 n.
+Proof.
+  fix F 1.
+  intros n.
+  destruct n as [| n0].
+  - simpl. split; constructor.
+  - destruct n0 as [| n1].
+    + simpl. split; intro H; inversion H.
+    + simpl. split; intro H; apply F; assumption.
+Qed.
+
 Lemma even2_iff_even3 n :
   even2 n = true <-> even3 n.
 Proof.
-Admitted.
+  apply even2_even3.
+Qed.
 
 (** EXERCISE
 
   Hint: The tactic [contradiction] is useful if you have an obviously false
   hypothesis.
-
 **)
+
+Lemma even3_to_even4_fixpoint :
+  forall n, even3 n ->
+  even4 n.
+Proof.
+  fix F 1.
+  intro n.
+  destruct n.
+  - constructor.
+  - destruct n.
+    + contradiction.
+    + simpl. intro e3. constructor. apply F. assumption.
+Qed.
+
 Lemma even3_to_even4 n :
   even3 n ->
   even4 n.
 Proof.
-Admitted.
+  apply even3_to_even4_fixpoint.
+Qed.
 
 (** EXERCISE **)
 Lemma even4_to_even1 n :
   even4 n ->
   even1 n.
 Proof.
-Admitted.
+  intro e4.
+  induction e4 as [| n IH4 [m eq]].
+  - exists 0. trivial.
+  - replace (S (S n)) with (2 * (S m)) by lia. exists (S m). trivial.
+Qed.
 
 (** Membership in a list **)
 Fixpoint In {A} (x : A) (l : list A) : Prop :=
@@ -271,13 +312,26 @@ Fixpoint In {A} (x : A) (l : list A) : Prop :=
   (add the missing constructor(s)).
 
 **)
-Inductive In_i {A} : A -> list A -> Prop := . (* REPLACE ME *)
+Inductive In_i {A} : A -> list A -> Prop :=
+  | Hd a l : In_i a (a :: l)
+  | Tl a l : forall b, In_i a l -> In_i a (b :: l).
 
 (** EXERCISE **)
 Lemma In_iff A (x : A) l :
   In x l <-> In_i x l.
 Proof.
-Admitted.
+  induction l as [| b l IH].
+  - simpl. split.
+    + intro f. exfalso. assumption.
+    + intro inL. inversion inL.
+  - simpl. split.
+    + intros [eq | inL].
+      * rewrite eq. constructor.
+      * constructor. apply IH. assumption.
+    + intro inL. inversion inL.
+      * left. trivial.
+      * right. apply IH. assumption.
+Qed.
 
 (** ADVANCED EXERCISES
 
@@ -308,27 +362,55 @@ Module Fib_Iter.
     As a reminder fib 0 = 0, fib 1 = 1 and fib (n+2) = fib (n+1) + fib n.
 
   **)
+  (* Definition fib_helper (n : nat) : nat * nat := *)
+  (*   iter (fun '(a,b) => (b,a+b)) n (0,1). *)
+  Definition fib_helper (tuple : nat * nat) : nat * nat :=
+    let (a,b) := tuple in
+    (b,a+b).
+
   Definition fib (n : nat) : nat :=
-    REPLACE_ME.
+    fst (iter fib_helper n (0,1)).
 
   (** EXERCISE **)
   Lemma fib_eq0 :
     fib 0 = 0.
   Proof.
-  Admitted.
+    unfold fib. simpl. trivial.
+  Qed.
 
   (** EXERCISE **)
   Lemma fib_eq1 :
     fib 1 = 1.
   Proof.
-  Admitted.
+    unfold fib. simpl. trivial.
+  Qed.
 
   (** EXERCISE **)
+  
+
+  Definition add_pair (p q : nat * nat) : nat * nat :=
+    let '(a1,b1) := p in
+    let '(a2,b2) := q in
+    (a1 + a2, b1 + b2).
+
   Lemma fib_eq3 :
     forall n,
-      fib (S (S n)) = fib n + fib (S n).
+    iter fib_helper (S (S n)) (0,1) = add_pair (iter fib_helper n (0,1)) (iter fib_helper (S n) (0,1)).
   Proof.
-  Admitted.
+    intro n.
+    assert (linear :forall x0 y0 x1 y1, add_pair (iter (fun '(a, b) => (b, a + b)) n (x0, y0)) (iter (fun '(a, b) => (b, a + b)) n (x1, y1)) = iter (fun '(a, b) => (b, a + b)) n (add_pair (x0,y0) (x1,y1))). {
+      induction n as [| n IH].
+      - simpl. trivial.
+      - intros x0 y0 x1 y1. rewrite iter_shift. rewrite iter_shift. rewrite iter_shift. rewrite IH.
+        f_equal. simpl. f_equal. lia.
+    }
+    rewrite iter_shift.
+    rewrite iter_shift.
+    rewrite iter_shift.
+    simpl.
+    rewrite linear.
+    f_equal.
+  Qed.
 
 End Fib_Iter.
 
@@ -353,14 +435,19 @@ Lemma rtclos'_trans :
     rtclos' R y z ->
     rtclos' R x z.
 Proof.
-Admitted.
+  intros ? ? ? ? ? xy yz.
+  induction xy as [| x y z' xy yz' IH].
+  - assumption.
+  - exact (trans' R x y z xy (IH yz)).
+Qed.
 
 (** EXERCISE **)
 Lemma rtclos_iff :
   forall A (R : A -> A -> Prop) x y,
     rtclos R x y <-> rtclos' R x y.
 Proof.
-Admitted.
+  split.
+  - intro xy. 
 
 (** Implementation of the Cantor pairing and its inverse function
 
