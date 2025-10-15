@@ -365,8 +365,7 @@ Module Fib_Iter.
   (* Definition fib_helper (n : nat) : nat * nat := *)
   (*   iter (fun '(a,b) => (b,a+b)) n (0,1). *)
   Definition fib_helper (tuple : nat * nat) : nat * nat :=
-    let (a,b) := tuple in
-    (b,a+b).
+    (snd tuple,(fst tuple) + (snd tuple)).
 
   Definition fib (n : nat) : nat :=
     fst (iter fib_helper n (0,1)).
@@ -375,41 +374,47 @@ Module Fib_Iter.
   Lemma fib_eq0 :
     fib 0 = 0.
   Proof.
-    unfold fib. simpl. trivial.
+    reflexivity.
   Qed.
 
   (** EXERCISE **)
   Lemma fib_eq1 :
     fib 1 = 1.
   Proof.
-    unfold fib. simpl. trivial.
+    reflexivity.
   Qed.
 
   (** EXERCISE **)
   
+  (**)
+  (* Definition add_pair (p q : nat * nat) : nat * nat := *)
+  (*   let '(a1,b1) := p in *)
+  (*   let '(a2,b2) := q in *)
+  (*   (a1 + a2, b1 + b2). *)
+  (**)
+  (* Lemma fib_eq3 : *)
+  (*   forall n, *)
+  (*   iter fib_helper (S (S n)) (0,1) = add_pair (iter fib_helper n (0,1)) (iter fib_helper (S n) (0,1)). *)
+  (* Proof. *)
+  (*   intro n. *)
+  (*   assert (linear :forall x0 y0 x1 y1, add_pair (iter (fun '(a, b) => (b, a + b)) n (x0, y0)) (iter (fun '(a, b) => (b, a + b)) n (x1, y1)) = iter (fun '(a, b) => (b, a + b)) n (add_pair (x0,y0) (x1,y1))). { *)
+  (*     induction n as [| n IH]. *)
+  (*     - simpl. trivial. *)
+  (*     - intros x0 y0 x1 y1. rewrite iter_shift. rewrite iter_shift. rewrite iter_shift. rewrite IH. *)
+  (*       f_equal. simpl. f_equal. lia. *)
+  (*   } *)
+  (*   rewrite iter_shift. *)
+  (*   rewrite iter_shift. *)
+  (*   rewrite iter_shift. *)
+  (*   simpl. *)
+  (*   rewrite linear. *)
+  (*   f_equal. *)
+  (* Qed. *)
 
-  Definition add_pair (p q : nat * nat) : nat * nat :=
-    let '(a1,b1) := p in
-    let '(a2,b2) := q in
-    (a1 + a2, b1 + b2).
-
-  Lemma fib_eq3 :
-    forall n,
-    iter fib_helper (S (S n)) (0,1) = add_pair (iter fib_helper n (0,1)) (iter fib_helper (S n) (0,1)).
+  Lemma fib_eq2 n:
+    fib (S (S n)) = (fib (S n)) + fib n.
   Proof.
-    intro n.
-    assert (linear :forall x0 y0 x1 y1, add_pair (iter (fun '(a, b) => (b, a + b)) n (x0, y0)) (iter (fun '(a, b) => (b, a + b)) n (x1, y1)) = iter (fun '(a, b) => (b, a + b)) n (add_pair (x0,y0) (x1,y1))). {
-      induction n as [| n IH].
-      - simpl. trivial.
-      - intros x0 y0 x1 y1. rewrite iter_shift. rewrite iter_shift. rewrite iter_shift. rewrite IH.
-        f_equal. simpl. f_equal. lia.
-    }
-    rewrite iter_shift.
-    rewrite iter_shift.
-    rewrite iter_shift.
-    simpl.
-    rewrite linear.
-    f_equal.
+    unfold fib. simpl. lia.
   Qed.
 
 End Fib_Iter.
@@ -448,6 +453,7 @@ Lemma rtclos_iff :
 Proof.
   split.
   - intro xy. 
+Admitted.
 
 (** Implementation of the Cantor pairing and its inverse function
 
