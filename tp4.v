@@ -345,10 +345,20 @@ Search (nat -> nat -> bool).
 **)
 
 #[export, refine] Instance Eq_nat : Eq nat := {|
-  eqb := REPLACE_ME
+  eqb := Nat.eqb
 |}.
 Proof.
-  apply REPLACE_ME.
+  induction x as [| x IH].
+  - simpl. destruct y.
+    + split; reflexivity.
+    + split.
+      * intro. exfalso. discriminate.
+      * intro. inversion H.
+  - destruct y.
+    + split; intro; exfalso; discriminate.
+    + simpl. split.
+      * intro eq. f_equal. apply IH. assumption.
+      * intro eq. inversion eq. rewrite <- H0. apply IH. reflexivity.
 Defined. (* We still need to use Defined though. *)
 
 Compute (eqb 0 1).
