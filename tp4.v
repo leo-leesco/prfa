@@ -384,6 +384,35 @@ Compute (memb 12 [ 3 ; 5 ; 1 ]).
 
 **)
 
+Class Group (A : Type) (neu : A) (op : A -> A -> A) := {
+  grp_left_neutral : forall x, op neu x = x ;
+  grp_right_neutral : forall x, op x neu = x ;
+  grp_assoc : forall x y z, op (op x y) z = op x (op y z);
+  grp_right_inverse : forall x, exists y, op x y = neu;
+  grp_left_inverse : forall x, exists y, op y x = neu;
+}.
+
+Lemma grp_unique_neu {A : Type} {e : A} {op : A -> A -> A} (G : Group A e op):
+  forall f, (forall x, op f x = x /\ op x f = x) -> f = e.
+Proof.
+  intros.
+  specialize (H e) as [H _].
+  rewrite <- (grp_right_neutral f).
+  assumption.
+Qed.
+
+Lemma grp_unique_inv {A : Type} {e : A} {op : A -> A -> A} (G : Group A e op):
+  forall x, forall y z, op x y = e /\ op x z = e /\ op y x = e /\ op z x = e -> y = z.
+Proof.
+  intros. destruct H as [xy [xz [yx zx]]].
+  rewrite <- (grp_right_neutral y).
+  rewrite <- xz.
+  rewrite <- grp_assoc.
+  rewrite yx.
+  rewrite grp_left_neutral.
+  reflexivity.
+Qed.
+
 (** AUTOMATION
 
   Classes are one form of automation. There are others in Coq. The main one
