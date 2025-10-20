@@ -413,6 +413,15 @@ Proof.
   reflexivity.
 Qed.
 
+#[export] Instance GroupMonoid {A : Type} {e : A} {op : A -> A -> A} (G : Group A e op): Monoid A e op.
+Proof.
+  refine {|
+    mon_left_neutral := grp_left_neutral;
+    mon_right_neutral := grp_right_neutral;
+    mon_assoc := grp_assoc;
+  |}.
+Defined.
+
 (** AUTOMATION
 
   Classes are one form of automation. There are others in Coq. The main one
@@ -433,14 +442,16 @@ Lemma In_hd :
   forall A (x : A) l,
     In x (x :: l).
 Proof.
-Admitted.
+  intros. simpl. auto.
+Qed.
 
 Lemma In_tl :
   forall A (x y : A) l,
     In x l ->
     In x (y :: l).
 Proof.
-Admitted.
+  intros. simpl. auto.
+Qed.
 
 (** EXERCISE
 
@@ -457,7 +468,8 @@ Lemma In_4 :
     In x l ->
     In x (a :: b :: c :: d :: l).
 Proof.
-Admitted.
+  intros. simpl. right. right. right. right. assumption.
+Qed.
 
 (** Applying the lemma by hand is not very nice, and rather tedious.
     We're going to declare hints so that auto knows how to use them.
@@ -488,7 +500,11 @@ Lemma In_hd' :
   forall A (x : A) l,
     In x (x :: l).
 Proof.
-Admitted.
+  intros. debug auto with indb.
+Qed.
+
+#[export] Hint Resolve In_hd' : indb.
+#[export] Hint Resolve In_tl : indb.
 
 (** EXERCISE
 
@@ -504,18 +520,35 @@ Goal forall A (x a b c d : A) l,
   In x l ->
   In x (a :: b :: c :: d :: l).
 Proof.
-Admitted.
+  intros. auto with indb.
+Qed.
 
 Goal forall A (x a b c d : A) l,
   In x (a :: b :: x :: c :: d :: l).
 Proof.
-Admitted.
+  intros. auto with indb.
+Qed.
 
 (** EXERCISE
 
   Show that In x l implies In x (l ++ r) and that In x r implies In x (l ++ r).
 
 **)
+
+Lemma In_l : forall {A : Type} (x : A) (l r : list A), In x l -> In x (l ++ r).
+Proof.
+  intros A x. induction l; simpl; intros.
+  - exfalso. assumption.
+  - destruct H; auto.
+Qed.
+
+Lemma In_r : forall {A : Type} (x : A) (r l : list A), In x r -> In x (l ++ r).
+Proof.
+  intros A x.
+  induction l; simpl; auto.
+Qed.
+
+Hint Resolve In_l In_r : indb.
 
 (** EXERCISE
 
@@ -528,17 +561,21 @@ Admitted.
 
 **)
 
-Goal forall A (x a b c d : A) l l',
+Lemma complex_list_IN : forall A (x a b c d : A) l l',
   In x l ->
   In x ([ a ; b ; c ] ++ l' ++ d :: l).
 Proof.
-Admitted.
+  auto with indb.
+Qed.
 
 Goal forall A (x a b c d : A) l l',
   In x l ->
   In x (l ++ [ a ; b ; c ] ++ l' ++ [ d ]).
 Proof.
-Admitted.
+  auto with indb.
+Qed.
+
+Hint Resolve complex_list_IN : indb.
 
 (** EXERCISE
 
@@ -554,7 +591,11 @@ Goal forall A (x y a b c d : A) l l',
   x = y ->
   In x ([ a ; b ; c ] ++ l' ++ d :: y :: l).
 Proof.
-Admitted.
+  intros.
+  apply complex_list_IN. rewrite H. auto with indb.
+Restart.
+  auto with indb.
+Qed.
 
 (** EXERCISE
 
@@ -570,6 +611,7 @@ Admitted.
 Goal forall (a b c d : nat) l l',
   In (a + b) ([ b ; c ] ++ l' ++ d :: (b + a) :: l).
 Proof.
+  auto with arith indb.
 Admitted.
 
 (** EXERCISE
@@ -646,7 +688,9 @@ Qed.
 Goal forall A (x : A) l l',
   exists y, In y (l ++ x :: l').
 Proof.
-Admitted.
+  intros.
+  eexists. auto with indb.
+Qed.
 
 (** auto also has an eauto variant. You can use it to deal with quantifiers.
     It is generally slower than auto so you can use it when auto fails.
@@ -678,7 +722,11 @@ Goal forall A (P : A -> A -> Prop) (Q : A -> Prop),
   (forall x y, P x y -> Q x) ->
   (forall x, Q x).
 Proof.
+  intros ? ? ? H1 H2 x. 
+  eapply H2.
+  destruct (H1 x) as [y p].
 Admitted.
+
 
 (** ADVANCED: SETOID REWRITE
 
