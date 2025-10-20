@@ -594,7 +594,7 @@ Proof.
   intros.
   apply complex_list_IN. rewrite H. auto with indb.
 Restart.
-  auto with indb.
+  intros. subst. debug auto with indb.
 Qed.
 
 (** EXERCISE
@@ -723,10 +723,10 @@ Goal forall A (P : A -> A -> Prop) (Q : A -> Prop),
   (forall x, Q x).
 Proof.
   intros ? ? ? H1 H2 x. 
-  eapply H2.
   destruct (H1 x) as [y p].
-Admitted.
-
+  eapply H2.
+  eassumption.
+Qed.
 
 (** ADVANCED: SETOID REWRITE
 

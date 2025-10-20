@@ -90,6 +90,13 @@ Qed.
 
 **)
 
+Goal forall (A B : Prop), A + B -> A \/ B.
+Proof.
+  intros.
+  destruct H; auto.
+  Show Proof.
+Qed.
+
 Locate "+".
 Print sum.
 
@@ -100,6 +107,11 @@ Print sum.
 
 **)
 
+Goal forall (f : bool -> bool), (exists (x: bool), f x = true) -> {x : bool | f x = true}.
+Proof.
+  intros f H.
+Abort.
+
 (** ** Singleton elimination **)
 
 (** EXERCISE
@@ -107,6 +119,12 @@ Print sum.
   Write a term that goes from False to any A : Type.
 
 **)
+
+Goal forall (A:Type), False -> A.
+Proof.
+  intros.
+  exfalso. assumption.
+Qed.
 
 (** EXERCISE
 
