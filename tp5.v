@@ -110,7 +110,14 @@ Print sum.
 Goal forall (f : bool -> bool), (exists (x: bool), f x = true) -> {x : bool | f x = true}.
 Proof.
   intros f H.
-Abort.
+  destruct (f true) eqn:htrue.
+  - now exists true.
+  - destruct (f false) eqn:hfalse.
+    + now exists false.
+    + exfalso. destruct H as [[] fx].
+      * rewrite fx in htrue. discriminate.
+      * rewrite fx in hfalse. discriminate.
+Qed.
 
 (** ** Singleton elimination **)
 
@@ -134,6 +141,11 @@ Qed.
   the subsingleton criterion, or give a proof script that works because it does.
 
 **)
+
+Goal forall {A B}, A /\ B -> A * B.
+Proof.
+  intros. split; destruct H; assumption.
+Qed.
 
 (** EXERCISE
 
@@ -166,6 +178,10 @@ Abort.
   Write down both type and term for bintree_rect manually.
 
 **)
+
+Inductive bintree (A:Type) :=
+  | leaf (x : A)
+  | node (left : bintree A) (right : bintree A).
 
 (** EXERCISE
 

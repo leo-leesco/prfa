@@ -587,7 +587,7 @@ Hint Resolve complex_list_IN : indb.
 
 **)
 
-Goal forall A (x y a b c d : A) l l',
+Lemma eq_in : forall A (x y a b c d : A) l l',
   x = y ->
   In x ([ a ; b ; c ] ++ l' ++ d :: y :: l).
 Proof.
@@ -608,10 +608,13 @@ Qed.
 
 **)
 
-Goal forall (a b c d : nat) l l',
-  In (a + b) ([ b ; c ] ++ l' ++ d :: (b + a) :: l).
+Hint Resolve eq_in : indb.
+
+Goal forall (a b c d : nat)  ,
+  (* In (a + b) ([ b ; c ] ++ l' ++ d :: (b + a) :: l). *)
+  In (a + b) [a+b].
 Proof.
-  auto with arith indb.
+  debug auto with arith indb.
 Admitted.
 
 (** EXERCISE
@@ -653,7 +656,7 @@ Goal forall (a b c d : nat) l l',
   In (a + b + c) ([ a ; b ; c ] ++ l' ++ d :: (c + 0 + a + b) :: l).
 Proof.
   auto with indb.
-Admitted.
+Qed.
 
 Goal forall (a b c d : Z) l l',
   In (a + b + c)%Z ([ a ; b ; c ] ++ l' ++ d :: (c + d + 0 + a - d + b) :: l)%Z.
