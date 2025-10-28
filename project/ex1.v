@@ -165,6 +165,62 @@ Proof.
   - simpl in *. apply As.
     + assumption.
     + apply IHs. assumption.
-  (* - simpl in *. *)
-  - apply dne. unfold "~". intro. simpl in *. apply IH. auto.
+  - apply dne. intro. simpl in *. apply IH. auto.
+Qed.
+
+(* 1.2.d *)
+Lemma classical_consistency : (forall P, ~~P -> P) -> ~([] ⊢c bot).
+Proof.
+  intros dne impos.
+  apply soundness with (M := fun n => True) (A := []) (s := bot). (* the model does not matter here, we can put anything here *)
+  - assumption.
+  - assumption.
+  - simpl. split.
+Qed.
+
+
+(* 1.2.e *)
+Lemma constructive_soundness M A (s : form) :
+A ⊢c s -> ctx_interp M A -> ~~interp M s.
+Proof.
+  intros As MA nMs. apply nMs.
+  induction As as [ A s H | A s t sAt IH | A s t Ast As IHst IHs | A s As IH].
+  - induction A as [| t A IH].
+    + simpl in H. exfalso. assumption.
+    + destruct H.
+      * rewrite H in MA. simpl in MA. apply MA.
+      * apply IH.
+        ** assumption.
+        ** apply MA.
+  - simpl. intro H. apply IH.
+    + simpl. auto.
+    + simpl in nMs. auto.
+  - simpl in *. apply As.
+    + assumption.
+    + intro.
+      apply nMs.
+      apply H.
+      apply IHs.
+      assumption.
+      intro.
+      auto.
+    + apply IHs.
+      * assumption.
+      * intro.
+        apply nMs.
+        apply As.
+        ** assumption.
+        ** intro. auto.
+        ** assumption.
+  - simpl in *. exfalso. apply IH. auto. auto.
+Qed.
+
+(* 1.2.f *)
+Lemma constructive_consistency : ~([] ⊢c bot).
+Proof.
+  intros impos.
+  apply constructive_soundness with (M := fun n => True) (A := []) (s := bot). (* the model does not matter here, we can put anything here *)
+  - assumption.
+  - simpl. split.
+  - simpl. auto.
 Qed.
