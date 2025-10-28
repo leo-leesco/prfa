@@ -26,8 +26,6 @@ Notation "A ⊢c s" := (ndc A s).
 Create HintDb nddb.
 #[export] Hint Constructors ndc : nddb.
 
-Create HintDb datatypes.
-
 Lemma In_hd {A : Type} (x : A) (l : list A):
     In x (x :: l).
 Proof.
