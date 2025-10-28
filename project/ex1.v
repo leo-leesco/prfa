@@ -1,6 +1,7 @@
 From Stdlib Require Import List.
 Import ListNotations.
 
+(* 1.1 *)
 Inductive form : Type :=
   | var (x : nat)
   | bot
@@ -25,7 +26,7 @@ Notation "A ⊢c s" := (ndc A s).
 Create HintDb nddb.
 #[export] Hint Constructors ndc : nddb.
 
-Create HintDb listdb.
+Create HintDb datatypes.
 
 Lemma In_hd {A : Type} (x : A) (l : list A):
     In x (x :: l).
@@ -33,14 +34,12 @@ Proof.
   intros. simpl. auto.
 Qed.
 
-#[export] Hint Resolve In_hd : listdb.
-
 (* 1.1.b.1 *)
 Lemma imp_tauto (A : list form) (s : form) : A ⊢c s → s.
 Proof.
   apply impintro.
   apply ass.
-  auto with listdb.
+  auto with datatypes.
   (* firstorder. (* would have also worked *) *)
 Qed.
 
@@ -54,25 +53,104 @@ Proof.
   intros. simpl. auto.
 Qed.
 
-#[export] Hint Resolve In_tl : listdb.
 
 (* 1.1.b.2 *)
 Lemma neg_sat (A : list form) (s : form) : s :: A ⊢c neg (neg s).
 Proof.
   apply impintro.
-  apply impelim with s; auto with listdb nddb.
+  apply impelim with s; auto with datatypes nddb.
 Qed.
 
-(* 1.1.b.3 : by structural induction on the goal, we can only apply :
-   - assumption
-     we cannot apply assumption because the hypothesis is not satisfied
-   - implication elimination
-   if we try to use implication elimination, we end up proving 
-   - contradiction
-
-
-
-*)
+(* 1.1.b.3 *)
 Lemma dne_simpl : [neg (neg bot)] ⊢c bot.
 Proof.
-  apply contr. 
+  apply contr.
+  apply impelim with (s := neg bot) (t:= bot); auto with datatypes nddb.
+Restart.
+  apply impelim with (s := neg bot) (t := bot).
+  - auto with datatypes nddb.
+  - apply imp_tauto.
+Qed.
+
+(* 1.1.b.4 *)
+Lemma dne (A : list form) (s : form) : A ⊢c (neg (neg s)) → s.
+Proof.
+  apply impintro.
+  apply contr.
+  apply impelim with (s := neg s); auto with datatypes nddb.
+Qed.
+
+Lemma empty_subset {T : Type} (A : list T) : incl A [] <-> A = [].
+Proof.
+  split; intros.
+  - induction A as [| x A IH].
+    + reflexivity.
+    + unfold incl in *.
+      simpl in *.
+      exfalso.
+      apply H with x.
+      auto.
+  - rewrite H. unfold incl. auto.
+Qed.
+
+Lemma concat_sub {T : Type} (A B : list T) (x : T) : incl A B -> incl (x :: A) (x :: B).
+Proof.
+  intro inAB.
+  unfold incl.
+  intros a H. destruct H.
+  + rewrite H. auto with datatypes.
+  + auto with datatypes.
+Qed.
+
+(* 1.1.c *)
+Fact Weakc A B s :
+  A ⊢c s -> incl A B -> B ⊢c s.
+Proof.
+  intros H AsubB.
+  induction B.
+  - apply empty_subset in AsubB.
+    rewrite AsubB in H. assumption.
+  - unfold incl in *.
+Restart.
+  intro As. revert B.
+  induction As as [ A s H | A s t sAt IH | A s t Ast As IHst IHs | A s As IH]; intros B sub.
+  - apply ass. apply sub. assumption.
+  - apply impintro. auto with datatypes.
+  - apply impelim with s; auto.
+  - apply contr. auto with datatypes.
+Qed.
+
+(* 1.1.d *)
+Fixpoint ground s : Prop :=
+  match s with
+  | var x => False
+  | s → t => ground s /\ ground t
+  | bot => True
+  end.
+
+(* 1.2 *)
+
+Definition Model := nat -> Prop.
+
+(* 1.2.a *)
+Fixpoint interp (M : Model) (s : form) : Prop :=
+  match s with
+  | bot => False
+  | s → t => interp M s -> interp M t
+  | var x => M x
+  end.
+
+(* 1.2.b *)
+Fixpoint ctx_interp (M : Model) (A : list form) : Prop :=
+  match A with
+  | [] => True
+  | s :: A => interp M s /\ ctx_interp M A
+  end.
+
+Lemma soundness M A (s : form) :
+(forall P, (not (not P)) -> P) ->
+A ⊢c s -> ctx_interp M A -> interp M s.
+Proof.
+  intros dne As MA.
+  induction As as [ A s H | A s t sAt IH | A s t Ast As IHst IHs | A s As IH].
+  - 
