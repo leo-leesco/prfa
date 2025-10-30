@@ -26,12 +26,6 @@ Notation "A ⊢c s" := (ndc A s).
 Create HintDb nddb.
 #[export] Hint Constructors ndc : nddb.
 
-Lemma In_hd {A : Type} (x : A) (l : list A):
-    In x (x :: l).
-Proof.
-  intros. simpl. auto.
-Qed.
-
 (* 1.1.b.1 *)
 Lemma imp_tauto (A : list form) (s : form) : A ⊢c s → s.
 Proof.
@@ -42,15 +36,6 @@ Proof.
 Qed.
 
 #[export] Hint Resolve imp_tauto : nddb.
-
-Lemma In_tl :
-  forall A (x y : A) l,
-    In x l ->
-    In x (y :: l).
-Proof.
-  intros. simpl. auto.
-Qed.
-
 
 (* 1.1.b.2 *)
 Lemma neg_sat (A : list form) (s : form) : s :: A ⊢c neg (neg s).
@@ -89,15 +74,6 @@ Proof.
       apply H with x.
       auto.
   - rewrite H. unfold incl. auto.
-Qed.
-
-Lemma concat_sub {T : Type} (A B : list T) (x : T) : incl A B -> incl (x :: A) (x :: B).
-Proof.
-  intro inAB.
-  unfold incl.
-  intros a H. destruct H.
-  + rewrite H. auto with datatypes.
-  + auto with datatypes.
 Qed.
 
 (* 1.1.c *)
