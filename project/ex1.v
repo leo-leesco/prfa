@@ -80,12 +80,6 @@ Qed.
 Fact Weakc A B s :
   A ⊢c s -> incl A B -> B ⊢c s.
 Proof.
-  intros H AsubB.
-  induction B.
-  - apply empty_subset in AsubB.
-    rewrite AsubB in H. assumption.
-  - unfold incl in *.
-Restart.
   intro As. revert B.
   induction As as [ A s H | A s t sAt IH | A s t Ast As IHst IHs | A s As IH]; intros B sub.
   - apply ass. apply sub. assumption.
