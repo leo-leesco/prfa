@@ -1,3 +1,4 @@
-*Makefile.coq*
+*Makefile.rocq*
 *MetaRocqPrelude.*
 !MetaRocqPrelude.v
+*.aux
