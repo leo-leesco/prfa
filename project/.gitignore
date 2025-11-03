@@ -1,0 +1,5 @@
+*Makefile.rocq*
+*.aux
+*.vo*
+*.glob
+_opam
