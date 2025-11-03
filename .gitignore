@@ -1,7 +1,3 @@
 .DS_Store
 .lia.cache
-*Makefile.rocq*
-*.aux
-*.vo*
-*.glob
 project/_opam
