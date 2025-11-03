@@ -1,6 +1,6 @@
 (** MPRI — Exercise session 6 — Meta-programming **)
 
-From Coq Require Import Nat List String.
+From Stdlib Require Import Nat List String.
 
 Set Default Goal Selector "!".
 
@@ -31,7 +31,9 @@ Qed.
 **)
 
 Ltac splits :=
-  idtac. (* REPLACE ME *)
+  repeat match goal with
+  | |- ?A * ?B => split
+  end.
 
 (** Try it on these goals. **)
 
@@ -73,7 +75,11 @@ Abort.
 **)
 Goal forall n, n mod 14 = 7 -> n - n = 0.
 Proof.
-Admitted.
+  intros. clear H.
+  induction n.
+  - reflexivity.
+  - simpl. assumption.
+Qed.
 
 (** Matching on the type of an expression
 
@@ -92,7 +98,7 @@ Ltac handle_hyp h :=
 Goal forall (n : nat * nat), fst n = snd n.
 Proof.
   intro n.
-  handle_hyp n.
+  handle_hyp n. (*@%!*)
   handle_hyp n.
 Abort.
 
@@ -133,14 +139,22 @@ Abort.
 **)
 
 Ltac fwd h :=
-  idtac.
+  match type of h with
+  | ?P -> ?Q => let p := fresh "p" in assert (p : P); [| specialize (h p); clear p]
+  end.
 
 (** Try on the following goal.
   Do not use [apply], only [intros], [fwd] and [assumption]
 **)
 Goal forall P Q R, (P -> Q -> R) -> (P -> Q) -> P -> R.
 Proof.
-Admitted.
+  intros P Q R pqr pq p.
+  fwd pqr.
+  - assumption.
+  - fwd pqr.
+    + fwd pq; assumption.
+    + assumption.
+Qed.
 
 (** EXERCISE (Harder)
 
@@ -151,10 +165,10 @@ Admitted.
 **)
 
 Ltac forward_gen h tac :=
-  idtac.
+  fwd h; [tac |].
 
 (** We define handy notations **)
-Tactic Notation "forward" constr(H) := forward_gen H ltac:(idtac).
+Tactic Notation "forward" constr(H) := fwd H.
 Tactic Notation "forward" constr(H) "by" tactic(tac) := forward_gen H tac.
 
 Goal forall P Q R, (P -> Q -> R) -> (P -> Q) -> P -> R.
@@ -162,8 +176,8 @@ Proof.
   intros P Q R h1 h2 h3.
   forward h2 by assumption.
   do 2 forward h1 by assumption.
-  Fail assumption. (* This shoudl succeed! *)
-Admitted.
+  assumption.
+Qed.
 
 From PRFA Require Import MetaRocqPrelude.
 
@@ -264,6 +278,7 @@ Fixpoint identity (t : term) :=
   | tInt i => tInt i
   | tFloat f => tFloat f
   | tArray u arr def ty => tArray u (map identity arr) (identity def) (identity ty)
+  | tString s => tString s
   end.
 
 (** EXERCISE
