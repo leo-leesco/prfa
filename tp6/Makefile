@@ -1,10 +1,10 @@
-all: Makefile.coq
-	$(MAKE) -f Makefile.coq
+all: Makefile.rocq
+	$(MAKE) -f Makefile.rocq
 
-clean: Makefile.coq
-	$(MAKE) -f Makefile.coq clean
+clean: Makefile.rocq
+	$(MAKE) -f Makefile.rocq clean
 
-Makefile.coq:
-	coq_makefile -f _CoqProject -o Makefile.coq
+Makefile.rocq:
+	rocq makefile -f _RocqProject -o Makefile.rocq
 
 .PHONY: all clean
