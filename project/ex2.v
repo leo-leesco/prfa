@@ -130,6 +130,7 @@ Proof.
   assumption.
 Qed.
 
+(* 2.1.h *)
 Lemma consistence_equiv :
   [] ⊢m bot <-> [] ⊢c bot.
 Proof.
@@ -137,6 +138,7 @@ Proof.
   split.
 Qed.
 
+(* 2.1.i *)
 Definition dne s := ((s → bot) → bot) → s.
 
 Lemma consistency_of_dne s :
@@ -150,3 +152,189 @@ Proof.
   - unfold dne.
     apply ex1.dne.
 Qed.
+
+(* 2.2.a *)
+Class WModel := {
+  W : Type ;
+  rel : W -> W -> Prop ;
+  interp : W -> form -> Prop ;
+  abs : W -> Prop ;
+
+  reflexive : forall w, rel w w ;
+  transitive : forall w1 w2 w3, rel w1 w2 -> rel w2 w3 -> rel w1 w3 ;
+  abs_higher : forall w w', rel w w' -> abs w -> abs w' ;
+  var_higher : forall w w' s, rel w w' -> interp w s -> interp w' s ;
+}.
+
+Notation "w '<=(' M ) w'" := (@rel M w w') (at level 40, w' at next level).
+
+(* 2.2.b *)
+Fixpoint winterp : forall M : WModel, W -> form -> Prop :=
+  fun M w s => match s with
+             | var _ => interp w s
+             | bot => abs w
+             | s → t => forall w', w <=(M) w' /\ winterp M w' s -> winterp M w' t
+             end.
+
+(* Fixpoint winterp : forall M : WModel, W -> form -> Prop. *)
+(* Proof. *)
+(*   intros ? w s. *)
+(*   destruct s as [ x | | s t]. *)
+(*   - exact (interp w (var x)). *)
+(*   - exact (abs w). *)
+(*   - exact (forall w', w <=(M) w' /\ winterp M w' s -> winterp M w' t). *)
+(* Defined. *)
+
+(* 2.2.c *)
+Fixpoint ctx_winterp : forall M : WModel, W -> list form -> Prop :=
+  fun M w A => match A with
+               | [] => True
+               | s :: A => winterp M w s /\ ctx_winterp M w A
+               end.
+
+(* 2.2.d *)
+Lemma monotonicity M s w w':
+  w <=(M) w' -> winterp M w s -> winterp M w' s.
+Proof.
+  intros wsubw' Mws.
+  induction s as [| | s IHs t IHt]; simpl in *.
+  - eapply var_higher; eauto.
+  - eapply abs_higher; eauto.
+  - intros w0 [ wsubw0 Mw0s].
+    apply Mws. split.
+    + apply transitive with (w2 := w'); auto.
+    + auto.
+Qed.
+
+(* 2.2.e *)
+Lemma ctx_monotonicity M A w w':
+  w <=(M) w' -> ctx_winterp M w A -> ctx_winterp M w' A.
+Proof.
+  intros. induction A.
+  - trivial.
+  - simpl in *.
+    intuition.
+    eapply monotonicity; eauto.
+Qed.
+
+(* 2.2.f *)
+Lemma wsoundness M A s:
+  A ⊢m s -> forall w, ctx_winterp M w A -> winterp M w s.
+Proof.
+  intros As.
+  induction As as [ A s H | A s t sAt IH | A s t Ast As IHst IHs ]
+      ; intros w MA.
+  - induction A as [| t A IH].
+    + simpl in H. tauto.
+    + destruct H; simpl in MA.
+      * rewrite H in MA. tauto.
+      * apply IH.
+        ** assumption.
+        ** tauto.
+  - simpl. intros w' [ww' Ms].
+    apply IH. split.
+    + assumption.
+    + eapply ctx_monotonicity.
+      * apply ww'.
+      * assumption.
+  - simpl in *.
+    eapply As; eauto.
+    split.
+    + apply reflexive.
+    + auto.
+Qed.
+
+(* 2.2.g *)
+#[export, refine] Instance consistency_model : WModel := {|
+  W := unit;
+  rel := fun w w' => w = w';
+  abs := fun w => False;
+  interp := fun w s => True;
+|}.
+Proof.
+  - trivial.
+  - intuition. rewrite H. assumption.
+  - trivial.
+  - trivial.
+Defined.
+
+(* 2.2.h *)
+Lemma consistency :
+  ~([] ⊢m bot).
+Proof.
+  intro H.
+  apply wsoundness with (M := consistency_model) (w := tt) in H.
+  - assumption.
+  - split.
+Qed.
+
+(* 2.2.i *)
+#[export, refine] Instance notdne_model : WModel := {|
+  W := bool;
+  rel := Bool.le;
+  abs := fun w => False;
+  interp := fun w s => is_true w;
+|}.
+Proof.
+  - destruct w; simpl; reflexivity.
+  - intros. destruct w3; simpl in *.
+    + destruct w1; reflexivity.
+    + destruct w2; simpl in *.
+      * discriminate.
+      * assumption.
+  - trivial.
+  - intros. destruct w'.
+    + reflexivity.
+    + simpl in *. destruct w; simpl in *; assumption.
+Defined.
+
+Goal false <=(notdne_model) true.
+Proof.
+  simpl.
+  auto.
+Qed.
+
+Lemma true_false : ~ is_true false.
+Proof.
+  intro.
+  unfold is_true in *.
+  discriminate.
+Qed.
+
+Lemma true_true : is_true true.
+Proof.
+  reflexivity.
+Qed.
+
+(* 2.2.j *)
+Lemma dne_independent :
+  ~(forall s, [] ⊢m dne s).
+Proof.
+  intro H.
+  apply wsoundness with (M := notdne_model) (w := false) (s := dne (var 0)) in H; simpl in *.
+  - apply true_false.
+    apply (H false).
+    split.
+    + constructor.
+    + intros w' [l imp].
+      * apply (imp true).
+        split.
+        ** destruct w'; reflexivity.
+        ** reflexivity.
+  - constructor.
+Qed.
+
+(* 2.3.a *)
+#[export, refine] Instance syntactic_model : WModel := {|
+  W := list form;
+  rel := @incl form ;
+  abs := fun A => A ⊢m bot;
+  interp := fun A s => A ⊢m s;
+|}.
+Proof.
+  - unfold incl in *. auto.
+  - unfold incl in *. auto.
+  - intros. eapply Weakm; eauto.
+  - intros. eapply Weakm; eauto.
+Defined.
+
