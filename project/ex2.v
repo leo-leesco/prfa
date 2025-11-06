@@ -338,3 +338,56 @@ Proof.
   - intros. eapply Weakm; eauto.
 Defined.
 
+(* 2.3.b *)
+Lemma correctness A s :
+  winterp syntactic_model A s <-> A ⊢m s.
+Proof.
+  revert A. induction s; split; simpl in *; auto.
+  - intros.
+    apply impintro.
+    apply IHs2.
+    apply H.
+    split.
+    + auto with datatypes.
+    + apply IHs1.
+      auto with mddb datatypes.
+  - intros.
+    destruct H0 as [Asubw' w's1].
+    apply IHs2.
+    apply impelim with (s := s1).
+    + apply Weakm with (A := A); assumption.
+    + apply IHs1. assumption.
+Qed.
+
+Lemma Weak_ctx_syntactic A:
+   ctx_winterp syntactic_model A A.
+Proof.
+  induction A.
+  - constructor.
+  - simpl.
+    split.
+    + apply correctness.
+      auto with mddb datatypes.
+    + apply ctx_monotonicity with (w := A).
+      * simpl. auto with datatypes.
+      * assumption.
+Qed.
+
+(* 2.3.c *)
+Lemma completeness A s :
+  (forall M w, ctx_winterp M w A -> winterp M w s) -> A ⊢m s.
+Proof.
+  induction A; intros; simpl.
+  - apply correctness.
+    apply H.
+    simpl.
+    split.
+  - apply correctness.
+    apply H.
+    split.
+    + apply correctness.
+      auto with mddb datatypes.
+    + apply ctx_monotonicity with (w := A).
+      * simpl. auto with datatypes.
+      * apply Weak_ctx_syntactic.
+Qed.
