@@ -245,7 +245,7 @@ Proof.
 Qed.
 
 (* 2.2.g *)
-#[export, refine] Instance consistency_model : WModel := {|
+#[refine] Instance consistency_model : WModel := {|
   W := unit;
   rel := fun w w' => w = w';
   abs := fun w => False;
