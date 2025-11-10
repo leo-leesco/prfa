@@ -117,11 +117,18 @@ Fixpoint ctx_implies A s : form :=
 
 Notation "A --> s" := (ctx_implies A s) (at level 60).
 
-Lemma absurd_dne_ae A:
-  ~ [neg (neg (var 0))] ⊢ae A --> var 0.
+Lemma absurd_dne_ae A s:
+  ~ [neg (neg s)] ⊢ae A --> s.
 Proof.
-  remember (var 0) as s.
-  intro.
-  induction 1.
+  intro H.
+  induction H.
   - assumption.
-  - destruct A.
+Admitted.
+
+Theorem false_dne:
+  ~(forall s, [] ⊢m neg (neg s) → s).
+Proof.
+  intro H.
+  specialize (H (var 0)).
+  eapply wsoundness in H.
+Admitted.
