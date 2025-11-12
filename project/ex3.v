@@ -115,15 +115,24 @@ Fixpoint ctx_implies A s : form :=
   | t :: A => t → (ctx_implies A s)
   end.
 
-Notation "A --> s" := (ctx_implies A s) (at level 60).
+Notation "A ⇒ s" := (ctx_implies A s) (at level 60).
 
-Lemma absurd_dne_ae A s:
-  ~ [neg (neg s)] ⊢ae A --> s.
+Lemma absurd_dne_ae A:
+  ~ [neg (neg (var 0))] ⊢ae A ⇒ (var 0).
 Proof.
   intro H.
-  induction H.
-  - assumption.
-Admitted.
+  remember (A ⇒ (var 0)) as Ax.
+  remember [neg (neg (var 0))] as ctx.
+  (* credit to Loïc Chevalier for the generalization syntax below *)
+  induction H as [A' s t Ast IH As|] in A, HeqAx, Heqctx; subst. (* induction H in A, B, … = revert A,B puis intro directement après *)
+  - apply (IH (s :: A)); reflexivity.
+  - destruct H.
+    + destruct A; simpl in H.
+      * congruence.
+      * injection H as H1 H2.
+        destruct A; discriminate.
+    + assumption.
+Qed.
 
 Theorem false_dne:
   ~(forall s, [] ⊢m neg (neg s) → s).
