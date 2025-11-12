@@ -139,5 +139,19 @@ Theorem false_dne:
 Proof.
   intro H.
   specialize (H (var 0)).
-  eapply wsoundness in H.
-Admitted.
+  (* thanks to Loïc again for correctly helping me state the following statement and applying it (I wanted to [eapply] which does not work) *)
+  assert (in_worlds : forall M w, ctx_winterp M w [] -> winterp M w (neg (neg (var 0)) → var 0)). {
+    intros.
+    eapply wsoundness; eassumption.
+  }
+  apply Cut_elimination in in_worlds.
+  clear H.
+  rename in_worlds into H.
+
+  inversion H; subst.
+  - inversion H2; subst.
+    apply absurd_dne_ae with (A := []).
+    assumption.
+  - eapply absurd_ae.
+    eassumption.
+Qed.
