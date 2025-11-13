@@ -373,3 +373,16 @@ Fixpoint sem_typing (e : term) (s : form) :=
   | s → t => forall e1, sem_typing e1 s -> sem_typing (e e1) t
   end.
 
+Notation "⊨ e : s" := (sem_typing e s) (at level 60, e at next level).
+
+Theorem logical_facts e s :
+  (⊨ e : s -> SN e) /\
+  (⊨ e : s -> forall e', e »* e' -> ⊨ e' : s) /\
+  (neutral e -> (forall e', e » e' -> ⊨ e' : s) -> ⊨ e : s).
+Proof.
+  revert e.
+  induction s; intro.
+  1,2:
+      split;
+      simpl;
+      split.
