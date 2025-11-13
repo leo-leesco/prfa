@@ -382,7 +382,128 @@ Theorem logical_facts e s :
 Proof.
   revert e.
   induction s; intro.
-  1,2:
+  (* first solve first two induction cases *)
+  1,2: (* solve (1) *)
       split;
-      simpl;
+      trivial;
       split.
+  1,3: (* solve (2) *)
+      intros;
+      eapply SN_on_rtc;
+      eassumption.
+  1,2: (* solve (3) *)
+      constructor;
+      assumption.
+  split.
+  - intro.
+    apply SN_app with (e2 := V 0).
+    apply IHs2.
+    assert (v0s1 : ⊨ V 0 : s1). {
+      apply IHs1.
+      - simpl.
+        split.
+      - intros ? contra.
+        inversion contra.
+    }
+    auto.
+  - split.
+    + intros.
+      intros e1 ?.
+      destruct (IHs2 (e e1)) as (_ & IHs2' & _).
+      apply IHs2'.
+      * auto.
+      * auto using app_red.
+    + intros ? H.
+      intros e1 ?.
+      apply IHs1 in H1 as sn1.
+      induction sn1 as [e1 He1 He2].
+      apply IHs2.
+      * auto using neutral_app.
+      * intros.
+        inversion H2; subst.
+        ** contradiction.
+        ** contradiction.
+        ** apply H; assumption.
+        ** apply He2.
+           *** assumption.
+           *** destruct (IHs1 e1) as (_ & IHs1' & _).
+               apply IHs1'.
+               **** assumption.
+               **** constructor.
+                    assumption.
+Qed.
+
+Lemma Kmodel s t:
+  ⊨ K : s → t → s.
+Proof.
+  intros e1 s1 e2 t2.
+  specialize (logical_facts e1 s) as (sn1 & _ & _).
+  specialize (logical_facts e2 t) as (sn2 & _ & _).
+  specialize (sn1 s1).
+  specialize (sn2 t2).
+  apply logical_facts.
+  - simpl; trivial.
+  - intros.
+    inversion H; subst.
+    + assumption.
+    + inversion H3; subst. (* credit to Arthur Adjedj for the idea of [inversion H3] instead [inversion H] *)
+      * inversion H4.
+      * destruct (logical_facts e2' s) as (_ & thm_2 & _).
+        apply thm_2.
+        ** destruct (logical_facts e1 s) as (_ & thm_2e1 & _).
+        apply thm_2e1.
+          *** assumption.
+          *** constructor.
+              assumption.
+        ** constructor. (* the goal is quite clearly in reverse. I must have applied the wrong specialization of [logical_facts]…
+                         I could not follow closely the proof structure of the project starting at `apply the induction hypothsesis for e_1` : I do not understand which "induction hypothesis" I'm supposed to have in the context here, notably because I am not doing any induction here *)
+Admitted.
+
+Lemma Smodel s t u:
+  ⊨ S : (s → t → u) → (s → t) → s → u.
+Admitted. (* Admitted as suggested *)
+
+Theorem typing_model A s e:
+  (forall n t, nth_error A n = Some t -> ⊨ V n : t) -> A ⊢ e : s -> ⊨ e : s. (* credit to Arthur Adjedj for suggesting to generalize the lemma *)
+Proof.
+  intros H H0.
+  revert H.
+  induction H0.
+  - intro IH. apply IH.
+    assumption.
+  - intro H. apply IHtyping1.
+    + assumption.
+    + apply IHtyping2.
+      assumption.
+  - intro. apply Kmodel.
+  - intro. apply Smodel.
+Qed.
+
+Lemma wellTyped_SN e s:
+  [] ⊢ e : s -> SN e.
+Proof.
+  intro.
+  eapply logical_facts.
+  eapply typing_model.
+  2: eassumption.
+  intros.
+  rewrite nth_error_nil in H0.
+  discriminate.
+Qed.
+
+Lemma reduction e s:
+  [] ⊢ e : s -> exists e', e »* e' /\ ⊨ e' : s /\  ~ neutral e'.
+Proof.
+  intro.
+Admitted. (* I did not try solving this question to try to tackle what followed first *)
+
+(* 4.5.a *)
+Lemma noterm e :
+  ~ [] ⊢ e : bot.
+Proof.
+  intro.
+  apply reduction in H as (e' & r & typed & n).
+  apply n.
+  (* inversion r; subst; contradiction. *)
+  (* here, I don't really understand how I am supposed to case analysis, more specifically, on what… *)
+Admitted.
