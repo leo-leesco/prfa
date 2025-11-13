@@ -297,7 +297,7 @@ Lemma SN_app (e1 : term) e2 :
   SN (e1 e2) -> SN e1.
 Proof.
   intro.
-  remember (e1 e2) as e1e2 eqn:e.
+  remember (e1 e2) as e1e2 eqn:e. (* thanks to Arthur Adjedj for the syntax, for some reason it does not work without [eqn] *)
   revert e.
   revert e1 e2.
   induction H.

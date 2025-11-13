@@ -21,7 +21,7 @@ Check cf_ae_ind.
 
 Lemma WeakeningCF A B s :
   incl A B -> A ⊢cf s -> B ⊢cf s
-with WeakeningAE A B s :
+with WeakeningAE A B s : (* thanks to Virgile Marionneau for his advice on this syntax, which the whole ordeal a lot more pleasant *)
   incl A B -> A ⊢ae s -> B ⊢ae s.
 Proof.
   all: intros sub H; induction H.

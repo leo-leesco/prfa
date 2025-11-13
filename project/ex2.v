@@ -68,27 +68,6 @@ Proof.
         apply impelim with (s := trans t t0).
         ** auto with mddb datatypes.
         ** apply impelim with (s := trans t s0); auto with mddb datatypes.
-(* Restart. *)
-  (* revert t A. *)
-  (* induction s as [| | s0 IHs t0 IHt] *)
-  (* ; intros *)
-  (* ; simpl *)
-  (* ; repeat apply impintro *)
-  (* ; eapply impelim *)
-  (* ; eauto with mddb datatypes. *)
-  (* - apply impelim with (s := (((var x → t) → t) → t)). *)
-  (*   + auto with mddb datatypes. *)
-  (*   + repeat apply impintro. *)
-  (*     eapply impelim; eauto with mddb datatypes. *)
-  (* - repeat apply impintro. *)
-  (*   apply impelim with (s := (trans t t0 → t) → t). *)
-  (*   + apply IHt. *)
-  (*   + apply impintro. apply impelim with (s := ((trans t s0 → trans t t0) → t)). *)
-  (*     * auto with mddb datatypes. *)
-  (*     * apply impintro. *)
-  (*       apply impelim with (s := trans t t0). *)
-  (*       ** auto with mddb datatypes. *)
-  (*       ** apply impelim with (s := trans t s0); auto with mddb datatypes. *)
 Qed.
 
 (* 2.1.f *)
@@ -359,6 +338,7 @@ Proof.
     + apply IHs1. assumption.
 Qed.
 
+(* thanks to Virgile Marionneau on this one, I did not think that was the way to go, but he pushed me in the correct direction + gave me some advice on how to solve the goal *)
 Lemma Weak_ctx_syntactic A:
    ctx_winterp syntactic_model A A.
 Proof.
