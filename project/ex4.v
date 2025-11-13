@@ -338,5 +338,38 @@ Proof.
   - destruct IHtyping1, IHtyping2.
     + left. destruct H1 as (e1' & r1), H2 as (e2' & r2).
       eexists.
-      apply LeftRed.
+      constructor.
       eassumption.
+    + destruct H1 as [e1' r1].
+      left.
+      exists (e1' e2).
+      constructor.
+      assumption.
+    + destruct H2 as [e2' r2].
+      left.
+      exists (e1 e2').
+      constructor.
+      assumption.
+    + induction e1; auto.
+      * induction e1_1; simpl; auto; left.
+        ** econstructor.
+           apply Kproj.
+        ** destruct e1_1_1; eexists; constructor.
+           *** econstructor.
+           *** simpl in H1.
+               contradiction.
+           *** simpl in H1.
+               contradiction.
+  - auto.
+  - auto.
+    Unshelve.
+    all: assumption.
+Qed.
+
+(* 4.4 *)
+Fixpoint sem_typing (e : term) (s : form) :=
+  match s with
+  | bot | var _ => SN e
+  | s → t => forall e1, sem_typing e1 s -> sem_typing (e e1) t
+  end.
+
