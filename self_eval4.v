@@ -7,7 +7,7 @@
 
 *)
 
-Record prod' A B := pair'
+Record prod' A B: Type :=
   {
     fst' : A ;
     snd' : B
@@ -15,18 +15,22 @@ Record prod' A B := pair'
 
 Goal forall A B, prod' A B -> prod A B.
 Proof.
-  exact (fun A B '{| fst' := a ; snd' := b |} => (a, b)).
+  intros ?? [a b].
+  split; assumption.
 Defined.
 
 Goal forall A B, prod A B -> prod' A B.
 Proof.
-  intros A B []. split; assumption.
+  intros ?? [a b].
+  split; assumption.
 Defined.
 
 Definition prod'_ind :
-  forall A B (P : prod' A B -> Prop),
-    (forall a b, P (pair' A B a b)) ->
-    forall x : prod' A B, P x.
+  forall A B, forall P : prod' A B -> Prop,
+  (forall a b, P {| fst' := a; snd' := b |}) ->
+  forall p, P p.
 Proof.
-  refine (fun A B P H '(pair' _ _ a b) => H a b).
+  intros.
+  destruct p.
+  apply H.
 Qed.
