@@ -237,11 +237,10 @@ Definition le_indp :=
   (forall n m, le n m -> P n m -> P n (S m)) ->
   (forall n m, le n m -> P n m).
 
-Definition le_indp' (P : forall n m, le n m -> Prop) :
+Definition le_indp' (P : forall n m, le n m -> Prop) :=
   (forall n lenn, P n n lenn) ->
   (forall n m lenm, P n m lenm -> P n (S m) (le_S n m lenm)) ->
   (forall n m lenm, P n m lenm).
-Admitted.
 
 (*|
 ^^^^^^^^
