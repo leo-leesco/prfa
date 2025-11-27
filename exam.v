@@ -19,8 +19,11 @@ Definition Exists_rec {A : Type} (P0 : A -> Prop) :=
   (forall x l0 Pl, P l0 Pl -> P (x :: l0) (Exists_cons P0 x l0 Pl)) ->
   forall l Pl, P l Pl.
 
-Inductive tree {A} :=
-  | node (hd : A) (children : list tree).
+Definition Exists_recprop {A : Type} (P0 : A -> Prop) :=
+  forall (P : list A -> Prop),
+  (forall x l, P0 x -> P (x :: l)) ->
+  (forall x l, P l -> Exists P0 l -> P (x :: l)) ->
+  forall l, Exists P0 l -> P l.
 
 Goal forall (A : Type), False -> A.
 Proof.
@@ -30,4 +33,25 @@ Proof.
 Qed.
 
 Definition test (A : Type) : False -> A :=
-  fun A f => match f with end.
+  fun f => match f with end.
+
+Inductive ex (A : Type) (P : A → Prop) : Prop :=
+| ex_intro (a : A) (p : P a).
+
+Notation "∃ x, P" := (ex _ (fun x => P)).
+
+Inductive sig (A : Type) (P : A → Prop) : Type :=
+| exist (a : A) (p : P a).
+
+Notation "{ x | P }" := (sig _ (fun x => P)).
+
+Goal forall A (P : A -> Prop),  { x |P x } -> (ex _ (fun x => P x)).
+Proof.
+  intros.
+  destruct X.
+Abort.
+Goal nat + (bool → bool).
+Proof.
+  constructor ; intro x.
+(* constructor. intro x. *)
+Abort.
