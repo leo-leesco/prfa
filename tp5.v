@@ -179,9 +179,18 @@ Abort.
 
 **)
 
-Inductive bintree (A:Type) :=
+Inductive bintree (A:Type) : Type :=
   | leaf (x : A)
   | node (left : bintree A) (right : bintree A).
+
+Arguments leaf {A}.
+Arguments node {A}.
+
+Definition bintree_recind (A : Type) :=
+  forall (P : bintree A -> Type),
+  (forall x, P (leaf x)) ->
+  (forall l r, P l -> P r -> P (node l r)) ->
+  forall b, P b.
 
 (** EXERCISE
 
